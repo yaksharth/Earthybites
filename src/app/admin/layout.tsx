@@ -47,12 +47,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
-      if (!data.session?.user) {
-        router.push("/admin/login");
+      const isLoggedIn = !!data.session?.user;
+
+      if (pathname === "/admin/login") {
+        if (isLoggedIn) {
+          router.push("/admin");
+        } else {
+          setCheckingAuth(false);
+        }
       } else {
-        const u = data.session.user;
-        login(u.email, u.role, u.name);
-        setCheckingAuth(false);
+        const u = data.session?.user;
+        if (!isLoggedIn || !u) {
+          router.push("/admin/login");
+        } else {
+          login(u.email, u.role, u.name);
+          setCheckingAuth(false);
+        }
       }
     };
     
@@ -67,7 +77,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
 
     checkAuth();
-  }, [router, login, setTheme]);
+  }, [router, login, setTheme, pathname]);
 
   // Sync theme to local storage
   useEffect(() => {
